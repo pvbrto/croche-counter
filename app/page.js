@@ -1,101 +1,178 @@
-import Image from "next/image";
+"use client";
+
+import React, { useState, useEffect } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-8 row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li>Save and see your changes instantly.</li>
-        </ol>
+  const [pontos, setPontos] = useState(0);
+  const [carreira, setCarreira] = useState(0);
+  const [history, setHistory] = useState([]);
+  const [pontosCarreira, setPontosCarreira] = useState(0);
+  const [autoIncrementar, setAutoIncrementar] = useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:min-w-44"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    const storedPontos = parseInt(localStorage.getItem("pontos"), 10);
+    const storedCarreira = parseInt(localStorage.getItem("carreira"), 10);
+    const storedPontosCarreira = parseInt(localStorage.getItem("pontosCarreira"), 10);
+    const storedAutoIncrementar = localStorage.getItem("autoIncrementar") === "true";
+  
+    setPontos(!isNaN(storedPontos) ? storedPontos : 0);
+    setCarreira(!isNaN(storedCarreira) ? storedCarreira : 0);
+    setPontosCarreira(!isNaN(storedPontosCarreira) ? storedPontosCarreira : 0);
+    setAutoIncrementar(storedAutoIncrementar);
+  
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      {
+        pontos: !isNaN(storedPontos) ? storedPontos : 0,
+        carreira: !isNaN(storedCarreira) ? storedCarreira : 0,
+      },
+    ]);
+  }, []);
+
+  useEffect(() => {
+    console.log("History", history);
+  }, [history]);
+  
+  const incrementarPontos = () => {
+    const novoPontos = pontos + 1;
+  
+    setPontos(novoPontos);
+    localStorage.setItem("pontos", novoPontos);
+  
+    if (pontosCarreira !== 0 && autoIncrementar && novoPontos >= pontosCarreira) {
+      incrementarCarreira();
+      return;
+    }
+  
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      {
+        pontos: novoPontos,
+        carreira,
+      },
+    ]);
+  };
+
+  const incrementarCarreira = () => {
+    if (pontos !== 0) {
+      setPontos(0);
+      localStorage.setItem("pontos", 0);
+    }
+  
+    const novaCarreira = carreira + 1;
+    setCarreira(novaCarreira);
+    localStorage.setItem("carreira", novaCarreira);
+  
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      {
+        pontos: 0,
+        carreira: novaCarreira,
+      },
+    ]);
+  };
+
+  const zerar = () => {
+    setPontos(0);
+    localStorage.setItem("pontos", 0);
+    setCarreira(0);
+    localStorage.setItem("carreira", 0);
+  
+  };
+  
+  const editarValores = () => {
+    let pontos = parseInt(prompt("Digite o valor dos pontos"), 10);
+    let carreira = parseInt(prompt("Digite o valor da carreira"), 10);
+  
+    pontos = !isNaN(pontos) ? pontos : 0;
+    carreira = !isNaN(carreira) ? carreira : 0;
+  
+    setPontos(pontos);
+    localStorage.setItem("pontos", pontos);
+    setCarreira(carreira);
+    localStorage.setItem("carreira", carreira);
+  
+    setHistory((prevHistory) => [
+      ...prevHistory,
+      {
+        pontos,
+        carreira,
+      },
+    ]);
+  };
+  
+  const voltar = () => {
+    setHistory((prevHistory) => {
+      if (prevHistory.length <= 1) return prevHistory;
+  
+      const lastState = prevHistory[prevHistory.length - 2];
+      if (lastState) {
+        setPontos(lastState.pontos);
+        setCarreira(lastState.carreira);
+        localStorage.setItem("pontos", lastState.pontos);
+        localStorage.setItem("carreira", lastState.carreira);
+      }
+  
+      return prevHistory.slice(0, -1);
+    });
+  };
+
+  return (
+    <div className="bg-[#EEEEEE] w-full h-screen flex flex-col justify-center items-center">
+      <div className="bg-[#D4BEE4] w-5/6 h-32 flex flex-col justify-center items-center rounded-lg">
+        <div className="flex flex-row justify-center items-center mb-4">
+          <input type="number" className="w-12 h-12 rounded-lg mr-4" value={pontosCarreira} onChange={(e) => {
+  const value = parseInt(e.target.value, 10) || 0; // Parse to a number, fallback to 0
+  setPontosCarreira(value);
+  localStorage.setItem("pontosCarreira", value);
+}} />
+          <p className="text-md text-[#3B1E54]">Pontos por carreira</p>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-6 flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <div className="flex flex-row justify-center items-center">
+          <input type="checkbox" className="mr-4" checked={autoIncrementar} onChange={() => {setAutoIncrementar(!autoIncrementar), localStorage.setItem("autoIncrementar", !autoIncrementar);}} />
+          <p className="text-md text-[#3B1E54]">
+            Auto-incrementar carreira ao completar pontos
+          </p>
+        </div>
+      </div>
+
+      <div className="flex flex-row w-full justify-evenly items-center mt-12">
+        <div
+          className="bg-[#D4BEE4] w-40 h-24 cursor-pointer text-white flex flex-col justify-center items-center border-2 border-[#9B7EBD] font-bold py-2 px-4 rounded-md mt-4"
+          onClick={incrementarPontos}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+          <p className="text-2xl text-[#3B1E54] font-thin">{pontos}</p>
+          <p className="text-2xl text-[#3B1E54] font-thin">Pontos</p>
+        </div>
+
+        <div
+          className="bg-[#D4BEE4] w-40 h-24 text-white cursor-pointer flex flex-col justify-center items-center border-2 border-[#9B7EBD] font-bold py-2 px-4 rounded-md mt-4"
+          onClick={incrementarCarreira}
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+          <p className="text-2xl text-[#3B1E54] font-thin">{carreira}</p>
+          <p className="text-2xl text-[#3B1E54] font-thin">Carreiras</p>
+        </div>
+      </div>
+
+      <div className="flex flex-row w-full justify-evenly items-center mt-12">
+        <div className="bg-[#D4BEE4] w-40 h-12 cursor-pointer text-white flex flex-col justify-center items-center border-2 border-[#9B7EBD] font-bold py-2 px-4 rounded-md mt-4"
+          onClick={voltar}>
+          <p className="text-2xl text-[#3B1E54] font-thin">Voltar</p>
+        </div>
+
+        <div className="bg-[#D4BEE4] w-40 h-12 text-white cursor-pointer flex flex-col justify-center items-center border-2 border-[#9B7EBD] font-bold py-2 px-4 rounded-md mt-4"
+          onClick={zerar}>
+          <p className="text-2xl text-[#3B1E54] font-thin">Zerar</p>
+        </div>
+      </div>
+
+      <div className="flex flex-row w-full justify-evenly items-center mt-12">
+        <div className="bg-[#D4BEE4] w-60 h-12 text-white cursor-pointer flex flex-col justify-center items-center border-2 border-[#9B7EBD] font-bold py-2 px-4 rounded-md mt-4"
+          onClick={editarValores}>
+          <p className="text-2xl text-[#3B1E54] font-thin">Editar Valores</p>
+        </div>
+      </div>
     </div>
   );
 }
